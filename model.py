@@ -10,6 +10,10 @@ import pickle
 import joblib
 import time
 
+from pathlib import Path
+
+MODEL_PATH = Path("random_forest_mnist.joblib")
+
 class TrainingHistory:
     """Simple class to mimic the history attribute of TensorFlow models"""
     def __init__(self):
@@ -95,24 +99,10 @@ def train_model(n_estimators=100, max_depth=30, save_model=True):
     return model, history, test_accuracy, None, cm
 
 def load_or_train_model():
-    """
-    Load a pre-trained model if it exists, otherwise train a new model
-    
-    Returns:
-        model: Loaded or trained model
-        history: Training history (None if model was loaded)
-        test_accuracy: Accuracy on test set (None if model was loaded)
-        test_loss: Loss on test set (None if model was loaded)
-        confusion_matrix: Confusion matrix for test predictions (None if model was loaded)
-    """
-    if os.path.exists('mnist_model.joblib'):
-        try:
-            model = joblib.load('mnist_model.joblib')
-            return model, None, None, None, None
-        except Exception as e:
-            st.error(f"Error loading model: {e}")
-            # Train a new model if loading fails
-            return train_model()
+    if MODEL_PATH.exists():
+        return joblib.load(MODEL_PATH)
     else:
-        # Train a new model if no saved model exists
-        return train_model()
+        model = train_model()
+        MODEL_PATH.parent.mkdir(exist_ok=True)
+        joblib.dump(model, MODEL_PATH)
+        return model
